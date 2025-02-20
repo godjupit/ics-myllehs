@@ -29,6 +29,10 @@ int main(){
             execvp(cmd_argv[0], cmd_argv);
             exit(-1);
         }
+        int status;
+        if(waitpid(pid,&status,0) < 0){
+            exit(0);
+        }
     }
     exit(0);
 }

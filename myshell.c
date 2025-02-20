@@ -17,6 +17,9 @@ int parseline(char *cmdline){
     if(strcmp(cmd_argv[0],"cd") == 0){
         return 1;
     }
+    if(strcmp(cmd_argv[0], "quit") == 0){
+        return 1;
+    }
     return 0;
    
 }
@@ -27,33 +30,39 @@ int main(){
     while(1){
 
         memset(cmdline, '\0', MAXNUM);
-
+        memset(cmd_argv, 0, sizeof(cmd_argv));
         printf("> ");
         fgets(cmdline, MAXNUM, stdin);
         cmdline[strlen(cmdline) - 1] = '\0';
         int pd = parseline(cmdline);
+        pid_t pid;
 
-        pid_t pid = fork();
-        if (pid == 0 && pd == 0) {  // 子进程
-            if(!execvp(cmd_argv[0], cmd_argv)==0){
-                printf("command not found\n");
+        if(pd == 0) {
+            pid = fork();
+            if (pid == 0) {  // 子进程
+                if(execvp(cmd_argv[0], cmd_argv) == -1){
+                    printf("command not found\n");
+                }
+                exit(-1);
             }
-            exit(-1);
-        }
-
-
-        if(pd == 1 && strcmp(cmd_argv[0], "cd") == 0 && cmd_argv[1] != NULL){
-            if(chdir(cmd_argv[1]) == 0){
-                printf("dir changes to %s\n",cmd_argv[1]);
-            }else{
-                perror("chdir failed!\n");
+            int status;
+            if(waitpid(pid,&status,0) < 0){
+                exit(0);
+            }
+        }else{
+            if(strcmp(cmd_argv[0], "cd") == 0 && cmd_argv[1] != NULL){
+                if(chdir(cmd_argv[1]) == 0){
+                    printf("dir changes to %s\n",cmd_argv[1]);
+                }else{
+                    perror("chdir failed!\n");
+                }
             }
 
+            if(strcmp(cmd_argv[0],"quit") == 0){
+                exit(0);
+            }
         }
-        int status;
-        if(waitpid(pid,&status,0) < 0){
-            exit(0);
-        }
+
     }
     exit(0);
 }

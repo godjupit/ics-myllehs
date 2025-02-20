@@ -7,6 +7,7 @@ void parseline(char *cmdline){
     int i = 0;
     while(tmp){
         cmd_argv[i++] = tmp;
+        printf("%s\n",tmp);
         tmp = strtok(NULL, " ");
     }
 }
@@ -15,8 +16,19 @@ int main(){
 
     char cmdline[MAXNUM];
     while(1){
+
+        memset(cmdline, '\0', MAXNUM);
+
         printf("> ");
         fgets(cmdline, MAXNUM, stdin);
+        cmdline[strlen(cmdline) - 1] = '\0';
         parseline(cmdline);
+
+        pid_t pid = fork();
+        if (pid == 0) {  // 子进程
+            execvp(cmd_argv[0], cmd_argv);
+            exit(-1);
+        }
     }
+    exit(0);
 }
